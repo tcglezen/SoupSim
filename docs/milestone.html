@@ -18,10 +18,12 @@
 </nav>
 
 
+
 <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2021</h1>
 <h1 align="middle">Project Proposal: SoupSim</h1>
 <h2 align="middle">Thomas Glezen, Amy Liu, Joshua Yang, Katelyn Biesiadecki</h2>
 
+<h1>Doc</h1>
 <hr>
 <h2 align="middle">Progress Check</h2>
 <ul>
@@ -46,6 +48,65 @@
 </ul>
 
 Since we are unable to actually write code and test our implementation until setup is complete, we decided to multitask by creating pseudocode and researching physics. The general pseudocode (without yet implementing viscosity) is as follows:
+<hr>
+pseudocode
+
+<p style="text-indent: 2em;">
+  Initialize all particles
+</p>
+<p style="text-indent: 2em;">
+  Set t = 0
+</p>
+<p style="text-indent: 2em;">
+  Choose a ∆t
+</p>
+<p style="text-indent: 2em;">
+  for i from 0 to n
+</p>
+<p style="text-indent: 3em;">
+  for j from 1 to numparticles
+</p>
+
+<p style="text-indent: 4em;">
+  Get list Lj of neighbors for Pj
+</p>
+
+<p style="text-indent: 4em;">
+  Calculate Densityj for Pj using Lj
+</p>
+
+<p style="text-indent: 4em;">
+  Calculate Pressurej for Pj using Lj
+</p>
+
+<p style="text-indent: 4em;">
+  Calculate acceleration Aj for Pj using Densityj and Pressurej
+</p>
+
+<p style="text-indent: 4em;">
+  Move Pj using Aj and ∆t using Euler step t = t + ∆t
+</p>
+
+<p style="text-indent: 2em;">
+  Cleanup all data structures
+</p>
+
+<p style="text-indent: 2em;">
+  Exit
+</p>
+
+
+<h2 align="middle">Progress Relative to Plan</h2>
+Unfortunately, we’re not as far along into implementation as we’d like to be, given that the research and the setup were harder than anticipated. Luckily, we planned a buffer week to allow for these issues. Additionally, with the upcoming dead week and the end of live classes, we should be able to devote more time to grinding on the project. Thus, we don’t feel like we need to amend our work plan.
+
+<hr>
+
+<h1>Slides</h1>
+<!--<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vTTy3znd9wCQDb_74m4_N5RsjsZ-iLBHGmRH1KjMPjXJDM2JwVv7ybZyCQ5coFrzUqhT9YZ4tDGdaNB/embed?start=false&loop=false&delayms=5000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>-->
+<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vTTy3znd9wCQDb_74m4_N5RsjsZ-iLBHGmRH1KjMPjXJDM2JwVv7ybZyCQ5coFrzUqhT9YZ4tDGdaNB/embed?start=false&loop=false&delayms=5000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+<hr>
+<h1>Demo</h1>
+<iframe width="790" height="494" src="https://www.youtube.com/embed/JU-r92hvyn0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 
 </body>
