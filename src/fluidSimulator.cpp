@@ -256,56 +256,40 @@ void FluidSimulator::drawContents() {
 
 void FluidSimulator::drawWireframe(GLShader &shader) {
     // TODO: Change this to draw dots for each particle of the fluid
-  int num_structural_springs =
-      2 * fluid->num_width_points * fluid->num_height_points -
-      fluid->num_width_points - fluid->num_height_points;
-  int num_shear_springs =
-      2 * (fluid->num_width_points - 1) * (fluid->num_height_points - 1);
-  int num_bending_springs = num_structural_springs - fluid->num_width_points -
-                            fluid->num_height_points;
-
-//  int num_springs = fp->enable_structural_constraints * num_structural_springs +
-//                    fp->enable_shearing_constraints * num_shear_springs +
-//                    fp->enable_bending_constraints * num_bending_springs;
-    int num_springs = 1;
+  int num_particles = fluid->particles.size();
 
   MatrixXf positions(4, num_springs * 2);
   MatrixXf normals(4, num_springs * 2);
 
-  // Draw springs as lines
+  // Draw particles as dots
 
-  int si = 0;
-
-  for (int i = 0; i < fluid->springs.size(); i++) {
-    Spring s = fluid->springs[i];
-
-    if ((s.spring_type == STRUCTURAL && !cp->enable_structural_constraints) ||
-        (s.spring_type == SHEARING && !cp->enable_shearing_constraints) ||
-        (s.spring_type == BENDING && !cp->enable_bending_constraints)) {
-      continue;
-    }
-
-    Vector3D pa = s.pm_a->position;
-    Vector3D pb = s.pm_b->position;
-
-    Vector3D na = s.pm_a->normal();
-    Vector3D nb = s.pm_b->normal();
-
-    positions.col(si) << pa.x, pa.y, pa.z, 1.0;
-    positions.col(si + 1) << pb.x, pb.y, pb.z, 1.0;
-
-    normals.col(si) << na.x, na.y, na.z, 0.0;
-    normals.col(si + 1) << nb.x, nb.y, nb.z, 0.0;
-
-    si += 2;
-  }
+//  int si = 0;
+//
+//  for (int i = 0; i < num_particles; i++) {
+//    Particle p = fluid->particles[i];
+//
+//    Vector3D pa = s.pm_a->position;
+//    Vector3D pb = s.pm_b->position;
+//
+//    Vector3D na = s.pm_a->normal();
+//    Vector3D nb = s.pm_b->normal();
+//
+//    positions.col(si) << pa.x, pa.y, pa.z, 1.0;
+//    positions.col(si + 1) << pb.x, pb.y, pb.z, 1.0;
+//
+//    normals.col(si) << na.x, na.y, na.z, 0.0;
+//    normals.col(si + 1) << nb.x, nb.y, nb.z, 0.0;
+//
+//    si += 2;
+//  }
 
   //shader.setUniform("u_color", nanogui::Color(1.0f, 1.0f, 1.0f, 1.0f), false);
   shader.uploadAttrib("in_position", positions, false);
   // Commented out: the wireframe shader does not have this attribute
   //shader.uploadAttrib("in_normal", normals);
 
-  shader.drawArray(GL_LINES, 0, num_springs * 2);
+  shader.drawArray(GL_POINTS, 0, num_particles);
+  // we might need to call this somewhere -> glEnable(GL_PROGRAM_POINT_SIZE);
 }
 
 void FluidSimulator::drawNormals(GLShader &shader) {
