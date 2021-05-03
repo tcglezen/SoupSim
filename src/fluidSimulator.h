@@ -20,7 +20,7 @@ public:
 
   void init();
 
-  void loadFluid(fluid *fluid);
+  void loadFluid(Fluid *fluid);
   void loadFluidParameters(FluidParameters *fp);
   void loadCollisionObjects(vector<CollisionObject *> *objects);
   virtual bool isAlive();
@@ -41,7 +41,7 @@ private:
   void drawNormals(GLShader &shader);
   
   void load_shaders();
-  void load_textures();
+  //void load_textures();
   
   // File management
   

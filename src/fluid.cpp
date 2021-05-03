@@ -17,12 +17,11 @@ Fluid::Fluid(double width, double height, double depth, int num_width_points,
     this->num_height_points = num_height_points;
 
     buildFluid();
-    buildFluidMesh();
+    //buildFluidMesh();
 }
 
 Fluid::~Fluid() {
     particles.clear();
-    springs.clear();
 
     if (fluidMesh) {
         delete fluidMesh;
@@ -41,6 +40,22 @@ void Fluid::buildFluid() {
     }
 }
 
+float Fluid::hash_position(Vector3D pos) {
+
+    // hash position for a fluid (might not work too well since particles fly around the place)
+    // TODO: Replace this mechanism with FLANN!
+    double w = 3 * width / num_width_points;
+    double h = 3 * height / num_height_points;
+    double d = 3 * depth / num_depth_points;
+
+    int cx = pos.x / w;
+    int cy = pos.y / h;
+    int cz = pos.z / d;
+
+    // Hash function
+    return (cx << 10 ^ cy << 5 ^ cz);
+}
+
 bool Fluid::indexInRange(int x, int y) {
     return x >= 0 && x < num_width_points && y >= 0 && y < num_height_points;
 }
@@ -55,7 +70,7 @@ void Fluid::simulate(double frames_per_sec, double simulation_steps, FluidParame
     // TODO: Utilize FLANN to find neighbouring particles given any particle - Thomas
     // TODO: Compute physics of moving the particles - Katelyn
 
-    double mass = width * height * depth fp->density / num_width_points / num_height_points / num_depth_points;
+    double mass = width * height * depth * fp->density / num_width_points / num_height_points / num_depth_points;
     double delta_t = 1.0f / frames_per_sec / simulation_steps;
 
     // Compute total force acting on each point mass.

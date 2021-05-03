@@ -7,9 +7,12 @@
 
 using namespace CGL;
 
+// Forward declarations
+class Halfedge;
+
 struct Particle {
     Particle(Vector3D position)
-            : pinned(pinned), start_position(position), position(position),
+            : start_position(position), position(position),
               last_position(position) {}
 
     Vector3D normal();
@@ -24,6 +27,8 @@ struct Particle {
     Vector3D position;
     Vector3D last_position;
     Vector3D forces;
+    // mesh reference
+    Halfedge *halfedge;
 };
 
 #endif /* PARTICLE_H */

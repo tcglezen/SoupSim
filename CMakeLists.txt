@@ -1,24 +1,20 @@
 cmake_minimum_required(VERSION 2.8)
-project(CGL)
+project(SoupSim)
 
 #-------------------------------------------------------------------------------
 # Build options
 #-------------------------------------------------------------------------------
-option(CGL_BUILD_DEBUG    "Build for debug"          OFF)
-option(CGL_BUILD_SHARED   "Build shared libraries"   OFF)
-option(CGL_BUILD_DOCS     "Build documentation"      OFF)
-option(CGL_BUILD_TESTS    "Build tests programs"     OFF)
-option(CGL_BUILD_EXAMPLES "Build examples"           OFF)
+option(BUILD_LIBCGL    "Build with libCGL"            ON)
+option(BUILD_DEBUG     "Build with debug settings"    OFF)
+option(BUILD_DOCS      "Build documentation"          OFF)
 
-#-------------------------------------------------------------------------------
-# CMake modules
-#-------------------------------------------------------------------------------
-list(APPEND CMAKE_MODULE_PATH "${CGL_SOURCE_DIR}/cmake/modules/")
+if (BUILD_DEBUG)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
 
-#-------------------------------------------------------------------------------
-# CGL paths
-#-------------------------------------------------------------------------------
-set(CGL_INCLUDE_DIRS "${CGL_SOURCE_DIR}/include")
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+  set(BUILD_DEBUG ON CACHE BOOL "Build with debug settings" FORCE)
+endif()
 
 #-------------------------------------------------------------------------------
 # Platform-specific settings
@@ -29,50 +25,47 @@ set(CGL_INCLUDE_DIRS "${CGL_SOURCE_DIR}/include")
 ###################
 if(APPLE)
 
-  # Clang only
-  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "CLANG")
+  # OSX Framework dependencies
+  if(NOT BUILD_LIBCGL)
+    include_directories( "/System/Library/Frameworks" )
+    find_library (COCOA_LIBRARIES Cocoa)
+    find_library (IOKIT_LIBRARIES IOkit)
+    find_library (COREVIDEO_LIBRARIES CoreVideo)
+  endif()
 
-    # OSX Framework dependencies
-    if(NOT CGL_BUILD_SHARED)
-      include_directories( "/System/Library/Frameworks" )
-      find_library (COCOA_LIBRARIES Cocoa)
-      find_library (IOKIT_LIBRARIES IOkit)
-      find_library (COREVIDEO_LIBRARIES CoreVideo)
-    endif()
+  # Clang configuration
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
-    # Clang configuration
-    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "AppleClang")
+    set(CLANG_CXX_FLAGS "-std=c++11 -m64")
 
-      set(CLANG_CXX_FLAGS "-std=c++11 -m64")
+    if(BUILD_DEBUG)
+      set(CMAKE_BUILD_TYPE Debug)
+      set(CLANG_CXX_FLAGS "${CLANG_CXX_FLAGS} -g")
+    else(BUILD_DEBUG)
+      set(CLANG_CXX_FLAGS "${CLANG_CXX_FLAGS} -O3")
+      set(CLANG_CXX_FLAGS "${CLANG_CXX_FLAGS} -funroll-loops")
+      set(CLANG_CXX_FLAGS "${CLANG_CXX_FLAGS} -Wno-narrowing")
+      set(CLANG_CXX_FLAGS "${CLANG_CXX_FLAGS} -Wno-deprecated-register")
+    endif(BUILD_DEBUG)
 
-      if(CGL_BUILD_DEBUG)
-        set(CMAKE_BUILD_TYPE Debug)
-      else(CGL_BUILD_DEBUG)
-        set(CLANG_CXX_FLAGS "${CLANG_CXX_FLAGS} -O3")
-        set(CLANG_CXX_FLAGS "${CLANG_CXX_FLAGS} -funroll-loops")
-        set(CLANG_CXX_FLAGS "${CLANG_CXX_FLAGS} -Wno-narrowing")
-        set(CLANG_CXX_FLAGS "${CLANG_CXX_FLAGS} -Wno-deprecated-register")
-      endif(CGL_BUILD_DEBUG)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLANG_CXX_FLAGS}")
 
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLANG_CXX_FLAGS}")
+  endif()
 
-    endif()
+  # GCC configuration
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
-    # GCC configuration
-    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+    set(GCC_CXX_FLAGS "-std=gnu++11 -m64")
 
-      set(GCC_CXX_FLAGS "-std=gnu++11 -m64")
+    if(BUILD_DEBUG)
+      set(CMAKE_BUILD_TYPE Debug)
+      set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -g")
+    else(BUILD_DEBUG)
+      set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -O3")
+      set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -fopenmp")
+    endif(BUILD_DEBUG)
 
-      if(CGL_BUILD_DEBUG)
-        set(CMAKE_BUILD_TYPE Debug)
-      else(CGL_BUILD_DEBUG)
-        set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -O3")
-        set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -fopenmp")
-      endif(CGL_BUILD_DEBUG)
-
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_CXX_FLAGS}")
-
-    endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_CXX_FLAGS}")
 
   endif()
 
@@ -84,12 +77,14 @@ endif(APPLE)
 if(UNIX AND NOT APPLE)
 
   # GCC only
-  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
     set(GCC_CXX_FLAGS "-std=gnu++11 -m64")
+    set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -Wno-deprecated-declarations")
+    set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -Wno-misleading-indentation")
 
     # X11 Dependencies
-    if(NOT CGL_BUILD_SHARED)
+    if(NOT BUILD_LIBCGL)
       set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -lXi")
       set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -lXxf86vm")
       set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -lXinerama")
@@ -105,12 +100,13 @@ if(UNIX AND NOT APPLE)
     endif()
 
     # Debug configuration
-    if(CGL_BUILD_DEBUG)
+    if(BUILD_DEBUG)
         set(CMAKE_BUILD_TYPE Debug)
-    else(CGL_BUILD_DEBUG)
+        set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -g")
+    else(BUILD_DEBUG)
         set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -O3")
         set(GCC_CXX_FLAGS "${GCC_CXX_FLAGS} -fopenmp")
-    endif(CGL_BUILD_DEBUG)
+    endif(BUILD_DEBUG)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_CXX_FLAGS}")
 
@@ -123,29 +119,37 @@ endif()
 ####################
 if(WIN32)
 
+  # EIGEN fix:
+  # See "Cause 4" here:
+  # https://eigen.tuxfamily.org/dox/group__TopicUnalignedArrayAssert.html
+
+  # NOTE: future maintainers, you may want to use add_compile_definitions instead.
+  # this was added because too many students are using old CMake (<3.12) versions.
+  add_definitions(/DEIGEN_DONT_ALIGN)
+
   if(MSVC)
 
-    set(MSVC_CXX_FLAGS "-std=c++11")
+    set(MSVC_CXX_FLAGS "-std=gnu++11")
 
-    if(CGL_BUILD_DEBUG)
+    if(BUILD_DEBUG)
         set(CMAKE_BUILD_TYPE Debug)
-    else(CGL_BUILD_DEBUG)
-    endif(CGL_BUILD_DEBUG)
+    else(BUILD_DEBUG)
+        set(CMAKE_BUILD_TYPE Release)
+    endif(BUILD_DEBUG)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MSVC_CXX_FLAGS}")
-
-    add_subdirectory("${CGL_SOURCE_DIR}/deps/freetype") 
-
+    
   endif(MSVC)
 
   if(MINGW)
 
-    set(MSVC_CXX_FLAGS "-std=c++11")
+    set(MSVC_CXX_FLAGS "-std=gnu++11")
 
-    if(CGL_BUILD_DEBUG)
+    if(BUILD_DEBUG)
         set(CMAKE_BUILD_TYPE Debug)
-    else(CGL_BUILD_DEBUG)
-    endif(CGL_BUILD_DEBUG)
+    else(BUILD_DEBUG)
+        set(CMAKE_BUILD_TYPE Release)
+    endif(BUILD_DEBUG)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MSVC_CXX_FLAGS}")
 
@@ -154,64 +158,68 @@ if(WIN32)
 endif(WIN32)
 
 #-------------------------------------------------------------------------------
+# nanogui configuration and compilation
+#-------------------------------------------------------------------------------
+
+# Disable building extras we won't need (pure C++ project)
+set(NANOGUI_BUILD_EXAMPLE OFF CACHE BOOL " " FORCE)
+set(NANOGUI_BUILD_PYTHON  OFF CACHE BOOL " " FORCE)
+set(NANOGUI_INSTALL       OFF CACHE BOOL " " FORCE)
+set(NANOGUI_USE_GLAD      ON  CACHE BOOL " " FORCE)
+
+# Add the configurations from nanogui
+add_subdirectory(ext/nanogui)
+include_directories(ext/nanogui/include)
+
+# For reliability of parallel build, make the NanoGUI targets dependencies
+set_property(TARGET glfw glfw_objects nanogui PROPERTY FOLDER "dependencies")
+
+# For Windows, set the library output directory to put the DLL's next
+# to the binary. I tried to use add_custom_command to just do a copy as a
+# POST_BUILD setting, but for some reason no matter what the command does,
+# Visual Studio will complain about its solution file being modified?
+# In the interest of avoiding the flood of Piazza posts inquiring about this,
+# we take the more robust route.
+if(WIN32)
+  # Also worth mentioning is that since NANOGUI produces a DLL on windows,
+  # it is considered a "RUNTIME" and not a "LIBRARY" target according to CMake.
+  # See https://cmake.org/cmake/help/v3.0/prop_tgt/RUNTIME_OUTPUT_DIRECTORY.html
+  # > For DLL platforms the DLL part of a shared library is treated as a runtime target
+  set_target_properties(nanogui PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+endif(WIN32)
+
+#-------------------------------------------------------------------------------
 # Find dependencies
 #-------------------------------------------------------------------------------
 
 # Required packages
+find_package(OpenGL REQUIRED)
+find_package(Threads REQUIRED)
 if(NOT WIN32)
   find_package(Freetype REQUIRED)
 endif()
 
-
-#-------------------------------------------------------------------------------
-# Set definitions
-#-------------------------------------------------------------------------------
-add_definitions(${NANOGUI_EXTRA_DEFS})
-
-#-------------------------------------------------------------------------------
-# Set include directories
-#-------------------------------------------------------------------------------
-include_directories(
-  ${CGL_INCLUDE_DIRS}
-  ${FREETYPE_INCLUDE_DIRS}
-  ${NANOGUI_EXTRA_INCS}
-)
-
-#-------------------------------------------------------------------------------
-# Set link directories
-#-------------------------------------------------------------------------------
-link_directories(
-  ${FREETYPE_LIBRARY_DIRS}
-)
+# CGL
+if(BUILD_LIBCGL)
+  add_subdirectory(CGL)
+  include_directories(CGL/include)
+else(BUILD_LIBCGL)
+  find_package(CGL REQUIRED)
+endif(BUILD_LIBCGL)
 
 #-------------------------------------------------------------------------------
 # Add subdirectories
 #-------------------------------------------------------------------------------
-
-# CGL library source directory
 add_subdirectory(src)
 
-# CGL tests source directory
-if(CGL_BUILD_TESTS)
-  add_subdirectory(tests)
-endif()
-
-# CGL exmaples source directory
-if(CGL_BUILD_EXAMPLES)
-  add_subdirectory(examples)
-endif()
-
-# CGL documentation directory
-if(CGL_BUILD_DOCS)
+# build documentation
+if(BUILD_DOCS)
   find_package(DOXYGEN)
-  if(DOXYGEN_FOUND AND CGL_BUILD_DOCS)
+  if(DOXYGEN_FOUND AND BUILD_DOCS)
     add_subdirectory(docs)
   endif()
 endif()
 
-#-------------------------------------------------------------------------------
-# Packing
-#-------------------------------------------------------------------------------
-
 # Install settings
-set(CMAKE_INSTALL_PREFIX "${CGL_SOURCE_DIR}")
+set(CMAKE_INSTALL_PREFIX "${SoupSim_SOURCE_DIR}/")

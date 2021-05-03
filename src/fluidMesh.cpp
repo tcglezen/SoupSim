@@ -4,7 +4,7 @@
 using namespace CGL;
 using namespace std;
 
-Vector3D PointMass::normal() {
+Vector3D Particle::normal() {
   Vector3D n(0, 0, 0);
 
   Halfedge *start = halfedge;

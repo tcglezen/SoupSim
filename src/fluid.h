@@ -34,7 +34,7 @@ struct FluidParameters {
 struct Fluid {
     Fluid() {}
     Fluid(double width, double height, double depth, int num_width_points,
-          int num_height_points, int num_depth_points float thickness);
+          int num_height_points, int num_depth_points);
     ~Fluid();
 
     void buildFluid();
@@ -44,10 +44,11 @@ struct Fluid {
                   vector<CollisionObject *> *collision_objects);
 
     void reset();
-    void buildFluidMesh();
+    //void buildFluidMesh(); TODO: maybe used later?
 
     void self_collide(Particle &pm, double simulation_steps);
     float hash_position(Vector3D pos);
+    void build_spatial_map();
 
     // Fluid properties
     double width;
@@ -62,7 +63,7 @@ struct Fluid {
     // Fluid components
     vector<Particle> particles;
     vector<vector<int>> pinned;
-    vector<Spring> springs;
+    FluidMesh *fluidMesh;
 
     // Spatial hashing (legacy code and shall be replaced with FLANN)
     unordered_map<float, vector<Particle *> *> map;

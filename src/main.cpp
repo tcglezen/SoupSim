@@ -31,11 +31,11 @@ using json = nlohmann::json;
 
 const string BOWL = "bowl";
 const string PLANE = "plane";
-const string fluid = "fluid";
+const string FLUID = "fluid";
 
 const unordered_set<string> VALID_KEYS = {BOWL, PLANE, FLUID};
 
-fluidSimulator *app = nullptr;
+FluidSimulator *app = nullptr;
 GLFWwindow *window = nullptr;
 Screen *screen = nullptr;
 
@@ -156,7 +156,7 @@ void incompleteObjectError(const char *object, const char *attribute) {
   exit(-1);
 }
 
-bool loadObjectsFromFile(string filename, fluid *fluid, fluidParameters *fp, vector<CollisionObject *>* objects, int bowl_num_lat, int bowl_num_lon) {
+bool loadObjectsFromFile(string filename, Fluid *fluid, FluidParameters *fp, vector<CollisionObject *>* objects, int bowl_num_lat, int bowl_num_lon) {
   // Read JSON from file
   ifstream i(filename);
   if (!i.good()) {
@@ -180,7 +180,7 @@ bool loadObjectsFromFile(string filename, fluid *fluid, fluidParameters *fp, vec
     json object = it.value();
 
     // Parse object depending on type (fluid, bowl, or plane)
-    if (key == fluid) {
+    if (key == FLUID) {
       // fluid
       double width, height, depth;
       int num_width_points, num_height_points, num_depth_points;
@@ -233,13 +233,6 @@ bool loadObjectsFromFile(string filename, fluid *fluid, fluidParameters *fp, vec
         thickness = *it_thickness;
       } else {
         incompleteObjectError("fluid", "thickness");
-      }
-
-      auto it_orientation = object.find("orientation");
-      if (it_orientation != object.end()) {
-        orientation = *it_orientation;
-      } else {
-        incompleteObjectError("fluid", "orientation");
       }
 
       fluid->width = width;
@@ -345,14 +338,17 @@ int main(int argc, char **argv) {
   std::string project_root;
   bool found_project_root = find_project_root(search_paths, project_root);
   
-  fluid fluid;
-  fluidParameters fp;
+  Fluid fluid;
+  FluidParameters fp;
   vector<CollisionObject *> objects;
   
   int c;
   
   int bowl_num_lat = 40;
   int bowl_num_lon = 40;
+
+  int sphere_num_lat = 40;
+  int sphere_num_lon = 40;
   
   std::string file_to_load_from;
   bool file_specified = false;
@@ -405,7 +401,7 @@ int main(int argc, char **argv) {
   if (!file_specified) { // No arguments, default initialization
     std::stringstream def_fname;
     def_fname << project_root;
-    def_fname << "/scene/pinned2.json";
+    def_fname << "/scene/plane.json";
     file_to_load_from = def_fname.str();
   }
   
@@ -423,9 +419,9 @@ int main(int argc, char **argv) {
   //fluid.buildfluidMesh(); TODO: figure out how this works.
 
   // Initialize the fluidSimulator object
-  app = new fluidSimulator(project_root, screen);
-  app->loadfluid(&fluid);
-  app->loadfluidParameters(&fp);
+  app = new FluidSimulator(project_root, screen);
+  app->loadFluid(&fluid);
+  app->loadFluidParameters(&fp);
   app->loadCollisionObjects(&objects);
   app->init();
 

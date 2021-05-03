@@ -7,10 +7,10 @@
 using namespace nanogui;
 using namespace CGL;
 
-void Sphere::collide(PointMass &pm) {
+void Sphere::collide(Particle &p) {
   // TODO (Part 3): Handle collisions with spheres.
   // Calculate extending path vector
-  Vector3D pos = pm.position - origin;
+  Vector3D pos = p.position - origin;
   // Get distance of that
   double path_norm = pos.norm();
 
@@ -26,13 +26,13 @@ void Sphere::collide(PointMass &pm) {
       // we have a collision
 
       // Get norm of last pos relative to origin
-      double last_pos_norm = (pm.last_position - origin).norm();
+      double last_pos_norm = (p.last_position - origin).norm();
 
       // Correction vector moves last position to the tangent point
       Vector3D correction_vector = dir * (tangent_norm - last_pos_norm);
 
       // Apply correction vector to last position scaled by friction, then set to position
-      pm.position = pm.last_position + correction_vector * (1.0 - friction);
+      p.position = p.last_position + correction_vector * (1.0 - friction);
   }
 
 }
